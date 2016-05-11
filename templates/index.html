@@ -2,7 +2,18 @@
 <html>
   <head>
     <title> Haftalık Plan </title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="../static/min.css">
+    <script src="../static/zepto.js/"></script>
+    <script src="../static/zepto.data.js/"></script>
+    <script src="../static/vex.js"></script>
+    <script src="../static/vex.dialog.js"></script>
+    <link rel="stylesheet" href="../static/vex.css" />
+    <link rel="stylesheet" href="../static/vex-theme-default.css" />
+    <script>
+      vex.defaultOptions.className = 'vex-theme-default';
+    </script>
   </head>
   <body>
     <nav class="nav" tabindex="-1" onclick="this.focus()">
@@ -15,19 +26,48 @@
         <div>&nbsp;</div>
         <div class="courses">
           <h3>Dersler</h3>
-          <div class="course"> 
-            <h4 class="name">Patoloji</h4>
-            <small class="lecturer">Dr. Gregory House</small>
-          </div>
 
-          <div class="course new"> 
+          {% for c in courses %}
+          <a href="#" class="course-wrapper" draggable="true">
+          <div class="course"> 
+            <h4 class="name">{{c[0].decode('utf-8')}}</h4>
+            <small class="lecturer">{{c[1].decode('utf-8')}}</small>
+          </div>
+          </a>
+          {% endfor %}
+
+          <div>&nbsp;</div>
+
+          <div class="course new" onclick="add_course_dialog();"> 
             <h4 class="name">+</h4>
             <small class="lecturer">Yeni Ders Ekle...</small>
           </div>
+          <script>
+function add_course(name,lecturer) {
+  $.post('/weekly/course/add/', { 'name': name, 'lecturer': lecturer }, function(response){
+    
+  })
+}
+
+function add_course_dialog() {
+  vex.dialog.open({
+      message: 'Ders Ekle:',
+      input: '<label for="name">Ders: </label>\n <input name="name" type="text" value="" />\n<label for="lecturer">Hoca: </label>\n <input name="lecturer" type="text" value="" />\n',
+      callback: function(data) {
+        if (data === false) {
+          return console.log('Cancelled');
+        }
+        console.log('C', data.name, 'L', data.lecturer);
+        add_course(data.name, data.lecturer);
+      }
+  });
+}
+          </script>
         </div>
 
       </div>
       <div class="col c10">
+      {{week}}
         <table class="table">
           <thead>
             <tr>
@@ -40,74 +80,68 @@
             </tr>
           </thead>
           <tbody>
+            {% for i in range(8) %} 
             <tr>
-              <td>8:40</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
+              <td>{{hours[i]}}</td>
+              {% for lecture in lectures[i] %}
+                {% if lecture == 'none' %}
+                <td class="slot"></td>
+                {% else %}
+                <td class="slot"></td>
+              {% endfor %}
             </tr>
-            <tr>
-              <td>9:40</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>10:40</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>11:40</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr></tr><tr></tr><tr></tr><tr></tr><tr></tr><tr></tr><tr></tr><tr></tr>
-            <tr>
-              <td>13:40</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>14:40</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>15:40</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>16:40</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
+            {% endfor%}
           </tbody>
         </table>
       </div>
     </div>
+    <script>
+function handleDragStart(e) {
+  this.style.opacity = '0.7';  // this / e.target is the source node.
+
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/html', this.getElementByClass());
+}
+
+function handleDragEnd(e) {
+  this.style.opacity = '1';  // this / e.target is the source node.
+}
+
+function handleDragOver(e) {
+  if (e.preventDefault) {
+    e.preventDefault(); // Necessary. Allows us to drop.
+  }
+  e.dataTransfer.dropEffect = 'move';  // See the section on the DataTransfer object.
+  return false;
+}
+
+function handleDragEnter(e) {
+  this.classList.add('over');
+}
+
+function handleDragLeave(e) {
+  this.classList.remove('over');  // this / e.target is previous target element.
+}
+
+function handleDrop(e) {
+}
+
+var crs = document.querySelectorAll('[draggable]');
+console.log(crs);
+
+[].forEach.call(crs, function(c) {
+  c.addEventListener('dragstart'  , handleDragStart , false);
+  c.addEventListener('dragend'    , handleDragEnd   , false);
+});
+
+var crs = document.querySelectorAll('.slot');
+console.log(crs);
+
+[].forEach.call(crs, function(c) {
+  c.addEventListener('dragenter'  , handleDragEnter , false);
+  c.addEventListener('dragover'   , handleDragOver  , false);
+  c.addEventListener('dragleave'  , handleDragLeave , false);
+});
+  </script>
   </body>
 </html>
