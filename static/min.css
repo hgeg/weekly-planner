@@ -68,6 +68,13 @@ table {
   .table td {
     height: 36px;
   }
+
+  table td.slot {
+    font-size: 0.8em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 }

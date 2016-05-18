@@ -81,6 +81,9 @@ function add_course_dialog() {
           <tbody>
             {% for i in range(8) %} 
             <tr>
+              {% if i==4 %}
+              <tr></tr><tr></tr><tr></tr><tr></tr><tr></tr><tr></tr><tr></tr><tr></tr><tr></tr><tr></tr><tr></tr><tr></tr>
+              {% endif %}
               <td>{{hours[i]}}</td>
               {% for lecture in lectures[i] %}
                 {% if lecture == 'none' %}
