@@ -4,13 +4,13 @@
     <title> Haftalık Plan </title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="../static/min.css">
-    <script src="../static/zepto.js/"></script>
-    <script src="../static/zepto.data.js/"></script>
-    <script src="../static/vex.js"></script>
-    <script src="../static/vex.dialog.js"></script>
-    <link rel="stylesheet" href="../static/vex.css" />
-    <link rel="stylesheet" href="../static/vex-theme-default.css" />
+    <link rel="stylesheet" href="/static/min.css">
+    <script src="/static/zepto.js/"></script>
+    <script src="/static/zepto.data.js/"></script>
+    <script src="/static/vex.js"></script>
+    <script src="/static/vex.dialog.js"></script>
+    <link rel="stylesheet" href="/static/vex.css" />
+    <link rel="stylesheet" href="/static/vex-theme-default.css" />
     <script>
       vex.defaultOptions.className = 'vex-theme-default';
     </script>
@@ -18,7 +18,7 @@
   <body>
     <nav class="nav" tabindex="-1" onclick="this.focus()">
       <div class="container">
-          <a class="pagename current" href="#">Haftalık Plan</a>
+          <a class="pagename current" href="/weekly">Haftalık Plan</a>
       </div>
     </nav>
     <div class="row">
@@ -29,8 +29,9 @@
 
           {% for c in courses %}
           <a href="#" class="course-wrapper" draggable="true">
-          <div class="course"> 
-            <h4 class="name">{{c[0].decode('utf-8')}}</h4>
+          <div class="course ncrs"> 
+            <span class="close">x</span>
+            <span class="name">{{c[0].decode('utf-8')}}</span>
             <small class="lecturer">{{c[1].decode('utf-8')}}</small>
           </div>
           </a>
@@ -67,6 +68,13 @@ function add_course_dialog() {
 
       </div>
       <div class="col c10">
+        <div class="selector">
+          <b> 
+            <a class="btn-q" href="/weekly/{{prev}}/">&lt;</a>
+             {{wrange}}
+            <a class="btn-q" href="/weekly/{{next}}/">&gt;</a>
+          </b>
+        </div>
         <table class="table">
           <thead>
             <tr>
@@ -89,7 +97,8 @@ function add_course_dialog() {
                 {% if lecture == 'none' %}
                   <td class="slot" data-hour="{{hours[i]}}" data-day="{{loop.index0}}"></td>
                 {% else %}
-                  <td class="slot" data-hour="{{hours[i]}}" data-day="{{loop.index0}}">{{lecture.decode('utf-8')}}</td>
+                <div class="course new" onclick="add_course_dialog();"> 
+                  <td class="slot lecture" data-hour="{{hours[i]}}" data-day="{{loop.index0}}">{{lecture.decode('utf-8')}}</td>
                 {% endif %}
               {% endfor %}
             </tr>
@@ -99,25 +108,41 @@ function add_course_dialog() {
       </div>
     </div>
     <script>
+rfac = 774.9087662568945;//Math.random()*997
 function hashCode(str) { // java String#hashCode
     var hash = 0;
     for (var i = 0; i < str.length; i++) {
-       hash = str.charCodeAt(i) + ((hash << 5) - hash);
+       hash = str.charCodeAt(i)*rfac + ((hash << 9) - hash);
     }
     return hash;
 } 
 
 function intToRGB(i){
-    var c = (i & 0x00FFFFFF)
+    var c = (i & 0x00A1A1A1)
         .toString(16)
         .toUpperCase();
 
-    return "00000".substring(0, 6 - c.length) + c;
+    return "FFFFF".substring(0, 6 - c.length) + c;
 }
 
 function colour(str) {
   return intToRGB(hashCode(str));
 }
+
+var crs = document.querySelectorAll('.lecture');
+
+[].forEach.call(crs, function(c) {
+  console.log(colour(c.innerHTML));
+  c.style = "opacity: 0.9; background-color: #" + colour(c.innerHTML) + ";";
+});
+
+var crs = document.querySelectorAll('.ncrs');
+
+[].forEach.call(crs, function(c) {
+  clr = colour(c.getElementsByClassName('name')[0].innerHTML);
+  c.style = "background-color: #" + clr + ";";
+});
+
 
 function handleDragStart(e) {
   this.style.opacity = '0.7';  // this / e.target is the source node.
@@ -149,6 +174,7 @@ function handleDragLeave(e) {
 
 var dtarget;
 function handleDrop(e) {
+  e.preventDefault();
   dtarget = e.target;
   attrs = dtarget.attributes;
   name = e.dataTransfer.getData('lecture');
@@ -158,6 +184,8 @@ function handleDrop(e) {
   console.log('dropped ' + name + ' on ' + days[day] + ' at ' + hour);
   $.post('/weekly/lecture/add/', { 'name': name, 'day': day, 'hour': hour}, function(response){
     console.log(response);
+    dtarget.innerHTML = name;
+    dtarget.style = "background-color:#" + colour(name) + ";";
   })
 }
 

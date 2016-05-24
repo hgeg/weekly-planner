@@ -34,11 +34,17 @@ def getweek(day):
     return rdb.lrange(lkey,0,8)
 
 @app.route('/weekly/')
-def home():
-    week  = make_week_from(datetime.today())
+@app.route('/weekly/<dstr>/')
+def home(dstr=None):
+    if not dstr: date = datetime.today()
+    else: date = datetime.strptime(dstr, '%d-%m-%Y')
+    week  = make_week_from(date)
     lweek = zip( *map(getweek, week) )
     courses = map(lambda s: s.split(':'), rdb.smembers('weekly.courses.my'))
-    return render_template('index.html', lectures=lweek, courses=courses, hours=HOURS)
+    prevWeek = datetime.strftime(date - timedelta(days=7), '%d-%m-%Y')
+    nextWeek = datetime.strftime(date + timedelta(days=7), '%d-%m-%Y')
+    weekDesc = "%s - %s"%(week[0], week[-1])
+    return render_template('index.html', lectures=lweek, courses=courses, hours=HOURS, prev=prevWeek, next=nextWeek, wrange=weekDesc)
 
 @app.route('/weekly/course/all/')
 def get_courses():
